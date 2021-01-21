@@ -1,3 +1,41 @@
+# ES5
+
+## 函数调用
+
+### q1：call()，apply()，bind()的用法
+
+答：官方解释是这样的
+
+call()：调用对象的方法，用另一个对象替换当前对象
+
+apply()：调用函数，用指定的对象替换函数的this值，用指定的数组替换函数的参数
+
+bind()：对于给定的函数，创建与原始函数具有相同主体的绑定函数。绑定函数的this对象与指定对象关联，并具有指定的初始参数
+
+大致看一下意思好像没什么区别，总结一句话：改变当前函数对象this指向
+
+我们都知道如果在没有模块化划分的前提下，函数对象中的this是指向window对象的，即全局对象
+
+```javascript
+function fn() {
+	console.log(this);
+};
+fn(); // Window {window: Window, …}
+```
+
+又或者在一个一般对象中声明一个函数对象，此时函数对象中的this是指向这个一般对象的
+
+```javascript
+var obj = {
+	fn: function() {
+		console.log(this);
+	};
+};
+obj.fn(); // {fn: ƒ}
+```
+
+而call()，apply()，bind()的作用就是改变这个this
+
 # ES6
 
 ## 面向对象
@@ -27,7 +65,7 @@ var dog = {
 dog.eat(); // dog is eating
 ```
 
-二、构造函数实现继承：在`__proto__`之上做了一些变通，让JS可以像Java那样new出来对象，但是缺点是每个属性和方法都会在每个实例上重新创建一遍，dog实例和cat实例都会创建（this.eat = new Function('')）一个eat方法，但两个方法并不相等，不同实例上的同名函数是不相等的，这样会同时占用两块内存，造成内存浪费
+二、构造函数实现继承：在`__proto__`之上做了一些变通，让JS可以像Java那样new出来对象
 
 ```javascript
 function Animal(name, sex) { // 构造函数
@@ -35,20 +73,19 @@ function Animal(name, sex) { // 构造函数
     this.sex = sex;
     this.eat = function() {
         console.log(this.name + ' is eating', 'sex：' + this.sex);
-    }
-    console.log(this);
+    };
 }
 
-var dog = new Animal('dog', 'male'); // Animal {name: "dog", sex: "male", eat: ƒ}
+var dog = new Animal('dog', 'male');
 dog.eat(); // dog is eating sex：male
 
-var cat = new Animal('cat', 'female') // Animal {name: "cat", sex: "female", eat: ƒ}
+var cat = new Animal('cat', 'female');
 cat.eat(); // cat is eating sex：female
 
 console.log(dog.eat === cat.eat); // false
 ```
 
-或许我们也可以把eat方法设置成全局函数，就像下面这样
+但是这个方法的缺点是构造函数的每个属性和方法都会在实例对象中重新创建一遍，dog实例和cat实例都会创建（this.eat = new Function('')）一个eat方法，但两个方法并不相等，不同实例上的同名函数是不相等的，这样会同时占用两块内存，造成内存浪费，或许我们也可以把eat方法设置成全局函数试一下
 
 ```javascript
 function Animal(name, sex) { // 构造函数
@@ -58,22 +95,21 @@ function Animal(name, sex) { // 构造函数
 }
 
 function eat() {
-	console.log(this);
 	console.log(this.name + ' is eating', 'sex：' + this.sex);
 }
 
-var dog = new Animal('dog', 'male'); // Animal {name: "dog", sex: "male", eat: ƒ}
+var dog = new Animal('dog', 'male');
 dog.eat(); // dog is eating sex：male
 
-var cat = new Animal('cat', 'female') // Animal {name: "cat", sex: "female", eat: ƒ}
+var cat = new Animal('cat', 'female');
 cat.eat(); // cat is eating sex：female
 
 console.log(dog.eat === cat.eat); // true
 ```
 
-但是又出现了一个新问题，在全局作用域上定义的函数对象应该只能被某个唯一的对象调用，这样做就造成了全局污染问题，如果实例对象需要定义很多方法，那么就要定义很多个全局函数，那么又怎么能保证方法名不会重复呢？
+这时候虽然只占用了一块内存，并且两个实例对象上的方法相等了，但是又出现了一个新问题，在全局作用域上定义的函数对象应该只能被某个唯一的对象调用，这样做就造成了全局污染问题，如果实例对象需要定义很多方法，那么就要定义很多个全局函数，那么又怎么能保证方法名不会重复呢？
 
-好了，回过头来看一下new的时候到底做了什么事呢？我们先声明一个构造函数
+我们先来分析一下new的时候到底做了什么事，声明声明一个Animal构造函数
 
 ```javascript
 function Animal(name, sex) { // 构造函数
@@ -81,8 +117,8 @@ function Animal(name, sex) { // 构造函数
     this.sex = sex;
     this.eat = function() {
         console.log(this.name + ' is eating', 'sex：' + this.sex);
-    }
-    console.log(this); // 没有new出实例对象前，this指向window，实例化后会改变this指向，指向Animal函数对象
+    };
+    console.log(this); // 没有new出实例对象前，this指向window，实例化后会改变this指向，指向实例对象
 }
 ```
 
@@ -92,19 +128,15 @@ function Animal(name, sex) { // 构造函数
 var dog = {};
 ```
 
-在我们正常声明一个一般对象时，对象中是没有prototype属性的，但是当我们声明一个函数对象时，对象中便有了一个prototype属性
+在我们正常声明一个一般对象时，对象中有`__proto__`属性但是没有prototype属性，但是当我们声明一个函数对象时，对象中不仅有`__proto__`属性同时还有了一个prototype属性
 
 ```javascript
-var Animal = {
-	name: "animal",
-    sex: "male",
-	eat: function() {
-		console.log(this.name + ' is eating', 'sex：' + this.sex);
-	}
-};
-console.log(Animal.prototype) // undefined
+var obj = {};
+console.log(obj.__proto__) // {constructor: ƒ, …}
+console.log(obj.prototype); // undefined
 
 var fn = function() {}
+console.log(fn.__proto__); // ƒ () { [native code] }
 console.log(fn.prototype); // {constructor: ƒ}
 ```
 
@@ -115,7 +147,7 @@ dog.__proto__ = Animal.prototype;
 Animal.call(dog);
 ```
 
-Animal.prototype相当于是”**一、`__proto__`实现继承**“中的父类，因为构造函数是一个函数对象，不是一个一般对象
+Animal.prototype相当于是”**一、`__proto__`实现继承**“中的父类
 
 3.返回新对象
 
@@ -123,7 +155,7 @@ Animal.prototype相当于是”**一、`__proto__`实现继承**“中的父类�
 return dog;
 ```
 
-下面是拟写一个new方法实例
+下面拟写一个new方法
 
 ```javascript
 function Animal(name, sex) { // 构造函数
@@ -131,8 +163,8 @@ function Animal(name, sex) { // 构造函数
     this.sex = sex;
     this.eat = function() {
         console.log(this.name + ' is eating', 'sex：' + this.sex);
-    }
-    console.log(this); // 没有new出实例对象前，this指向window，实例化后会改变this指向，指向Animal函数对象
+    };
+    console.log(this); // 没有new出实例对象前，this指向window，实例化后会改变this指向，指向实例对象
 }
 
 function myNew(Parent, ...prop) {
@@ -142,7 +174,7 @@ function myNew(Parent, ...prop) {
     return Child;
 }
 
-var dog = myNew(Animal, 'dog', "male"); // Animal {name: "dog", sex: "male", eat: ƒ}
+var dog = myNew(Animal, 'dog', 'male'); // Animal {name: "dog", sex: "male", eat: ƒ}
 dog.eat(); // dog is eating sex：male
 ```
 
