@@ -137,7 +137,7 @@ cat.eat(); // cat is eating sex：female
 console.log(dog.eat === cat.eat); // false
 ```
 
-但是这个方法的缺点是构造函数的每个属性和方法都会在实例对象中重新创建一遍，dog实例和cat实例都会创建（this.eat = new Function('')）一个eat方法，但两个方法并不相等，不同实例上的同名函数是不相等的，这样会同时占用两块内存，造成内存浪费，或许我们也可以把eat方法设置成全局函数试一下
+但是这个方法的缺点是构造函数的每个属性和方法都会在实例对象中重新创建一遍，我们实际需要的只是name属性和sex属性不同而已，在new的时候dog实例和cat实例都会创建（this.eat = new Function('')）一个eat方法，但两个方法并不相等，不同实例上的同名函数是不相等的，这样会同时占用两块内存，造成内存浪费，或许我们也可以把eat方法设置成全局函数试一下
 
 ```javascript
 function Animal(name, sex) { // 构造函数
